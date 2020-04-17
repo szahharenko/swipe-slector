@@ -13,7 +13,9 @@ See [how it works](https://swipe-selector-ts.netlify.app/).
 
 ## Comments
 - A nice, self-contained component that is easy to configure.
-<SelectBox :list="Array<any>" :settings="{ name: string, unit: string, value: any }"></SelectBox>
+```vue
+<SelectBox :list="Array<any>" :settings="{ name: string, unit: string, value: any }"/>
+```
 
 - The Swiper dependency is very heavy and we would like to get rid of it.
 Replaced with fully custom written PointerEventDispatcher handler, allowing to bind Swipe, Tap, Drag events
