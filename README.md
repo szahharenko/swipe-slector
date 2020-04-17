@@ -1,24 +1,30 @@
 # swipe-slector
 
-## Project setup
-```
-npm install
-```
+## Preview:
+See [how it works](https://swipe-selector-ts.netlify.app/).
 
-### Compiles and hot-reloads for development
-```
-npm run serve
-```
+## Latest build:
+[![Netlify Status](https://api.netlify.com/api/v1/badges/0d20d9ca-ec86-47f9-9e90-85cd7312a10d/deploy-status)](https://app.netlify.com/sites/swipe-selector-ts/deploys)
 
-### Compiles and minifies for production
-```
-npm run build
-```
+## Dev:
+setup: npm install
+run : npm run serve
+build : npm run build
 
-### Lints and fixes files
-```
-npm run lint
-```
+## Comments
+- A nice, self-contained component that is easy to configure.
+<SelectBox :list="Array<any>" :settings="{ name: string, unit: string, value: any }"></SelectBox>
 
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
+- The Swiper dependency is very heavy and we would like to get rid of it.
+Replaced with fully custom written PointerEventDispatcher handler, allowing to bind Swipe, Tap, Drag events
+
+- Should work well with touch, mouse, and keyboard.
+Mouse and touch are implemented
+
+## Todo
+- Keyboard controls
+- Better animation effects
+- Fetch data and then embed component
+
+## Bugs
+- Unfocus all other selectors on focusing another
