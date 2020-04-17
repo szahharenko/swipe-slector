@@ -6,7 +6,7 @@
       :class="{ focused: focused, dragging: dragging }"
       ref="container"
     >
-      <select :name="settings.name" ref="select">
+      <select :name="settings.name" @keyup.left="keyLeft" @keyup.right="keyRight" ref="select">
         <option :selected="item === value" v-for="(item, index) in list" :key="index">{{item}}</option>
       </select>
       <strong>{{value}}</strong>
@@ -16,7 +16,7 @@
         <span class="selection-wrapper" ref="scroller" :style="{ 'left': this.drag + 'px' }">
           <span
             class="select-item"
-            @click.stop.prevent="setValue(item)"
+            @click.stop.prevent="setValue(item,true)"
             :class="{ active: item === value }"
             v-for="(item, index) in list"
             :key="index"
@@ -59,17 +59,21 @@ export default class SelectBox extends Vue {
     private value = 0;  
     private focused = false;
     private dragging = false;
-    private left = 0;  
-    private drag = 0;    
+    private spacing = 15    
+    private left = this.spacing;  
+    private drag = this.spacing;    
 
     mounted () {
         const defaultValue =  this.settings.value
-        this.value = defaultValue ? defaultValue : this.list[0] // setting default value or first from list
+        this.setValue(defaultValue || this.list[0]) // setting default value or first from list
         const parent = this.selection.clientWidth // measure element size
         const scroller = this.scroller.clientWidth // measure inner element size
-        const diff = scroller - parent // define dragging limits
 
-        const doc = new PointerEventDispatcher(document.body) // bind element for pointer events handling        
+        const diff = scroller - parent + this.spacing // define dragging limits + some space
+
+        const doc = new PointerEventDispatcher(document.body) // bind element for pointer events handling
+
+        this.centerSelected()
 
         doc.on('DRAG', (e: EventData) => {
             if(e.stop) {
@@ -79,23 +83,55 @@ export default class SelectBox extends Vue {
                 this.dragging = true
                 const newX = this.left - e.x
                 const end = diff + newX
-                if(end > 0 && newX < 0) {
+                if(end > 0 && newX - this.spacing < 0) {
                     this.drag = newX
                 }
             }
         })
     }
-  
-    public setValue(item: any): void {
+    private setNextElement(): void {
+      const next = this.list.indexOf(this.value) || 0
+      const nextItem = this.list[next + 1] || this.list[0]
+      this.setValue(nextItem, false)
+    }
+    private setPrevElement(): void {
+      const prev = this.list.indexOf(this.value) || 0
+      const prevItem = this.list[prev - 1] || this.list[this.list.length - 1]
+      this.setValue(prevItem, false)
+    }    
+    private keyRight (event: KeyboardEvent): void {
+      this.setNextElement()
+    }
+    private keyLeft (event: KeyboardEvent): void {
+      this.setPrevElement()
+    }
+    private setValue(item: any, close = false): void {
         this.select.value = item
         this.value = item
-        this.onBlur()
+        this.centerSelected()
+        if(close) this.onBlur()
     }
-    public onBlur () {
+    private centerSelected(): void {
+      setTimeout( () => {
+        const parentSize = this.selection.clientWidth
+        const active: any = this.scroller.querySelector('.active')
+        if(active) {
+          const activeLeft = active.offsetLeft
+          const activeSize = active.clientWidth          
+          const center = -activeLeft + parentSize / 2 - activeSize / 2
+          this.drag = center
+          //this.drag = diff + (parentSize / 2) - (activeSize / 2)
+          console.log('center', parentSize, activeLeft, center)
+        }
+      },25)
+    }
+    private onBlur(): void {
+      setTimeout( () => {
         this.focused = false
         this.dragging = false
+      },25)
     }
-    public onFocus () {
+    private onFocus(): void {
         this.focused = true
     }
 }
@@ -144,6 +180,7 @@ export default class SelectBox extends Vue {
     }
     small {
       flex: 1;
+      pointer-events: none;
     }
     .trigger {
       position: absolute;
@@ -170,6 +207,7 @@ export default class SelectBox extends Vue {
         width: 20%;
         height: 100%;
         pointer-events: none;
+        z-index: 2;
       } 
       &::before {
         left: 0;        
@@ -191,7 +229,7 @@ export default class SelectBox extends Vue {
         padding: 5px 0;
       }
 
-      > span {
+      .selection-wrapper {
         overflow: hidden;
         position: absolute;
         top: 0;
@@ -199,12 +237,17 @@ export default class SelectBox extends Vue {
         height: 100%;
         display: flex;
         align-items: center;
+        transition: all 0.5s;
       }
       .select-item {
         padding: 15px;
         display: block;
         user-select: none;
-
+        border-radius: 4px;
+        
+        &:hover {
+          background-color: #efefef;
+        }
         &.active {
           color: #00817a;
           font-weight: bold;

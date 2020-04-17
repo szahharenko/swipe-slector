@@ -7,9 +7,9 @@ See [how it works](https://swipe-selector-ts.netlify.app/).
 [![Netlify Status](https://api.netlify.com/api/v1/badges/0d20d9ca-ec86-47f9-9e90-85cd7312a10d/deploy-status)](https://app.netlify.com/sites/swipe-selector-ts/deploys)
 
 ## Dev:
-setup: npm install
-run : npm run serve
-build : npm run build
+- setup : npm install
+- run : npm run serve
+- build : npm run build
 
 ## Comments
 - A nice, self-contained component that is easy to configure.
@@ -22,8 +22,9 @@ Replaced with fully custom written PointerEventDispatcher handler, allowing to b
 Mouse and touch are implemented
 
 ## Todo
-- Keyboard controls
-- Better animation effects
+- #done - Center slector on current value
+- #done - Keyboard controls
+- #partialy done - Better animation effects
 - Fetch data and then embed component
 
 ## Bugs
