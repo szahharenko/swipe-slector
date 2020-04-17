@@ -1,17 +1,45 @@
 <template>
   <div id="app">
-    <img alt="Vue logo" src="./assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js + TypeScript App"/>
+
+    <form action="https://httpbin.org/post" method="post">
+      <SelectBox
+        :list="[0,80,320,280,98]"
+        :settings="{
+          name: 'income',
+          unit: 'EUR/Month',
+          value: 80
+        }">
+      </SelectBox>
+
+      <SelectBox
+        :list="['liters','kilometers','miles','inches','parrots']"
+        :settings="{
+          name: 'units',
+          unit: 'units'
+        }">
+      </SelectBox>
+
+      <SelectBox
+        :list="['here','is','my','test','assigment']"
+        :settings="{
+          name: 'words'
+        }">
+      </SelectBox>
+
+      <button type="submit">Submit example form</button>
+
+    </form>
+
   </div>
 </template>
 
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator';
-import HelloWorld from './components/HelloWorld.vue';
+import SelectBox from './components/swipe-slect/SelectBox.vue';
 
 @Component({
   components: {
-    HelloWorld,
+    SelectBox,
   },
 })
 export default class App extends Vue {}

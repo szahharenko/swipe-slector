@@ -1,88 +1,110 @@
 <template>
-    <div>
-      <label class="touch-swipe" @click="onFocus" :class="{ focused: focused, dragging: dragging }" ref="container">
-        <select :name="settings.name"  ref="select">
-          <option :selected="item === value" v-for="(item, index) in list" :key="index">
-            {{item}}
-          </option>
-        </select>
-        <strong>{{value}}</strong>
-        <small>{{settings.unit}}</small>
-        <span class="trigger"></span>
-        <span class="selection" ref="selection">
-            <span class="selection-wrapper" ref="scroller"  :style="{ 'left': this.drag + 'px' }">
-                <span class="select-item" @click.stop.prevent="setValue(item)" :class="{ active: item === value }" v-for="(item, index) in list" :key="index">
-                    {{item}}
-                </span>
-            </span>
+  <div>
+    <label
+      class="touch-swipe"
+      @click="onFocus"
+      :class="{ focused: focused, dragging: dragging }"
+      ref="container"
+    >
+      <select :name="settings.name" ref="select">
+        <option :selected="item === value" v-for="(item, index) in list" :key="index">{{item}}</option>
+      </select>
+      <strong>{{value}}</strong>
+      <small>{{settings.unit}}</small>
+      <span class="trigger"></span>
+      <span class="selection" ref="selection">
+        <span class="selection-wrapper" ref="scroller" :style="{ 'left': this.drag + 'px' }">
+          <span
+            class="select-item"
+            @click.stop.prevent="setValue(item)"
+            :class="{ active: item === value }"
+            v-for="(item, index) in list"
+            :key="index"
+          >{{item}}</span>
         </span>
-      </label>
+        <small>{{settings.unit}}</small>
+      </span>
+    </label>
   </div>
 </template>
 
-<script>
+<script lang="ts">
+import { Component, Prop, Vue, Ref } from 'vue-property-decorator';
 import PointerEventDispatcher from './swiper'
 
-export default {
-  name: 'SelectBox',
-  data () {
-      return {
-        value: 0,
-        focused: false,
-        dragging: false,
-        left: 0,
-        drag: 0
-      }
-  },
-  mounted () {
+interface Settings {
+    name: string;
+    unit?: string;
+    value?: number;
+}
 
-    const defaultValue = this.$props.settings.value
-    this.value = defaultValue ? defaultValue : this.$props.list[0]
+interface EventData {
+    stop? : boolean;
+    x: number;
+}
 
-    const doc = new PointerEventDispatcher(document)
-    const parent = this.$refs['selection'].clientWidth
-    const scroller = this.$refs['scroller'].clientWidth
-    const diff = scroller - parent
+@Component
+export default class SelectBox extends Vue {
 
-    doc.on('DRAG', (e) => {
-        if(e.stop) {
-            this.dragging = false
-            this.left = this.drag
-        } else {
-            this.dragging = true
-            const newX = this.left - e.x
-            const end = diff + newX
-            if(end > 0 && newX < 0) {
-                this.drag = newX
+    @Prop() private msg!: string;
+    @Prop() private list!: Array< any >;
+    @Prop() private settings!: Settings;
+
+
+    @Ref('select') readonly select!: HTMLSelectElement
+    @Ref('selection') readonly selection!: HTMLElement
+    @Ref('scroller') readonly scroller!: HTMLElement    
+
+    private name = 'SelectBox';
+    private value = 0;  
+    private focused = false;
+    private dragging = false;
+    private left = 0;  
+    private drag = 0;    
+
+    mounted () {
+        const defaultValue =  this.settings.value
+        this.value = defaultValue ? defaultValue : this.list[0] // setting default value or first from list
+        const parent = this.selection.clientWidth // measure element size
+        const scroller = this.scroller.clientWidth // measure inner element size
+        const diff = scroller - parent // define dragging limits
+
+        const doc = new PointerEventDispatcher(document.body) // bind element for pointer events handling        
+
+        doc.on('DRAG', (e: EventData) => {
+            if(e.stop) {
+                this.dragging = false
+                this.left = this.drag
+            } else {
+                this.dragging = true
+                const newX = this.left - e.x
+                const end = diff + newX
+                if(end > 0 && newX < 0) {
+                    this.drag = newX
+                }
             }
-        }
-    })
-  },
-  methods: {
-      setValue (item) {
-          this.$refs['select'].value = item
-          this.value = item
-          this.onBlur()
-      },
-      onBlur () {
+        })
+    }
+  
+    public setValue(item: any): void {
+        this.select.value = item
+        this.value = item
+        this.onBlur()
+    }
+    public onBlur () {
         this.focused = false
         this.dragging = false
-      },
-      onFocus () {
-          this.focused = true
-      }
-  },
-  props: {
-    list: Array,
-    settings: Object
-  }
+    }
+    public onFocus () {
+        this.focused = true
+    }
 }
 </script>
 <style scoped lang="scss">
-.touch-swipe {
+  .touch-swipe {
     display: inline-flex;
     flex-wrap: wrap;
-    align-items: flex-start;    
+    align-items: flex-start;
     min-width: 200px;
     position: relative;
     box-shadow: 0 0 3px 0 #bbb, 0 2px 0 #ccc;
@@ -96,75 +118,103 @@ export default {
     padding: 15px;
     font-size: 110%;
     &.focused {
-        transform: translateY(-3px);
-        box-shadow: 0 0 3px 0 #bbb, 0 7px 0 -3px #aaa;
+      transform: translateY(-3px);
+      box-shadow: 0 0 3px 0 #bbb, 0 7px 0 -3px #aaa;
     }
     &.dragging {
-        opacity: 1;
+      opacity: 1;
 
-        .trigger {
-            z-index: 2;
-        }
+      .trigger {
+        z-index: 2;
+      }
     }
     select {
-        position: absolute;
-        bottom: 100%;
-        right: 100%;
-        opacity: 0;
-        width: 0px;
-        height: 0px;
+      position: absolute;
+      bottom: 100%;
+      right: 100%;
+      opacity: 0;
+      width: 0px;
+      height: 0px;
     }
     strong {
-        flex: 1;
-        min-width: 100%;
-        display: block;
-        font-size: 150%;
+      flex: 1;
+      min-width: 100%;
+      display: block;
+      font-size: 150%;
     }
     small {
-        flex: 1;
+      flex: 1;
     }
     .trigger {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;        
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
     }
     .selection {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.3s;
+
+      &::after,
+      &::before {
+        content: '';
+        position: absolute;
+        top:0;
+        width: 20%;
+        height: 100%;
+        pointer-events: none;
+      } 
+      &::before {
+        left: 0;        
+        background: linear-gradient(to right,  rgba(255,255,255,1) 0%,rgba(255,255,255,0) 100%);
+      }      
+      &::after {
+        right: 0;        
+        background: linear-gradient(to right,  rgba(255,255,255,0) 0%,rgba(255,255,255,1) 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+      }
+
+      > small {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        text-align: center;
+        font-size: 75%;
+        opacity: 0.7;
+        padding: 5px 0;
+      }
+
+      > span {
+        overflow: hidden;
         position: absolute;
         top: 0;
         left: 0;
-        width: 100%;
         height: 100%;
-        opacity: 0;
-        pointer-events: none;
-        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+      }
+      .select-item {
+        padding: 15px;
+        display: block;
+        user-select: none;
 
-        > span {
-            overflow: hidden;
-            position: absolute;
-            top: 0;
-            left: 0;
-            height: 100%;            
-            display: flex;            
-            align-items: center;            
+        &.active {
+          color: #00817a;
+          font-weight: bold;
         }
-        .select-item {
-            padding: 15px;
-            display: block;
-            user-select: none;
-            
-            &.active {
-             color: #00817a;   
-             font-weight: bold;
-            }
-        }
+      }
     }
     &.focused .selection {
-        opacity: 1;
-        pointer-events: all;
-        background: rgba(255,255,255,1);
+      opacity: 1;
+      pointer-events: all;
+      background: rgba(255, 255, 255, 1);
     }
-}
-
+  }
 </style>
