@@ -29,6 +29,7 @@ class PointerEventDispatcher {
         element.addEventListener('mousedown', evt => this.handleMouseDown(evt), false)
         element.addEventListener('mouseup', evt => this.handleMouseUp(evt), false)
         element.addEventListener('mousemove', evt => this.handleMouseMove(evt), false)
+        element.addEventListener("touchmove", evt => this.handleFingerMove(evt), false)
         element.addEventListener('mouseenter', evt => this.handleMouseEnter(evt), false)
         element.addEventListener('mouseleave', evt => this.handleMouseLeave(evt), false)
     }
@@ -38,16 +39,20 @@ class PointerEventDispatcher {
     public off(evt: string, lcb: Function): void {
         this.evtMap[evt] = this.evtMap[evt].filter((cb: any) => cb !== lcb)
     }
-    public handleMouseMove(evt: MouseEvent): void {
-        if (this.d.dragging && this.d.isMouseDown) {
-            this.d.dragx = this.d.xDown - evt.clientX
-            this.d.dragy = this.d.yDown - evt.clientY
-        }
-        this.triggerEvent(evt.clientX, evt.clientY)
-    }    
     private trigger = (evt: string, data: any) => {
         this.evtMap[evt].map( (handler: Function) => handler(data, this.d))
     }
+
+    public handleMouseMove  = (evt: MouseEvent): void => this.pointerMove(evt.clientX, evt.clientY)    
+    public handleFingerMove = (evt: TouchEvent): void => this.pointerMove(evt.touches[0].clientX, evt.touches[0].clientY)
+    private pointerMove(x: number, y: number) {
+        if (this.d.dragging && this.d.isMouseDown) {
+            this.d.dragx = this.d.xDown - x
+            this.d.dragy = this.d.yDown - y       
+        }
+        this.triggerEvent(x, y)
+    }
+
     private handleTouchStart = (evt: TouchEvent) => this.pointerDown(evt.touches[0].clientX, evt.touches[0].clientY)
     private handleMouseDown = (evt: MouseEvent) => this.pointerDown(evt.clientX, evt.clientY)
     private pointerDown(x: number, y: number) {
@@ -58,6 +63,7 @@ class PointerEventDispatcher {
         this.d.startTime = new Date().getTime()
         this.d.isMouseDown = true
     }
+
     private handleMouseUp = (evt: MouseEvent) => this.pointerUp(evt.clientX, evt.clientY)
     private handleTouchEnd = (evt: TouchEvent) => this.pointerUp(evt.touches[0].clientX, evt.touches[0].clientY)
     private pointerUp(x: number, y: number) {
@@ -67,6 +73,7 @@ class PointerEventDispatcher {
         this.d.touchDuration = new Date().getTime() - this.d.startTime
         this.triggerEvent(x, y)
     }
+    
     private handleMouseEnter = (evt: MouseEvent) => this.trigger('MOUSEENTER', evt)
     private handleMouseLeave = (evt: MouseEvent) => this.trigger('MOUSELEAVE', evt)
     private triggerEvent(x: number, y: number) {
